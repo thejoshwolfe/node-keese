@@ -25,7 +25,7 @@ exports.next = function(n) {
   var orders = 0;
   for (var i = integer.length - 1; i >= 0 || carry > 0; i--) {
     orders++;
-    var value = values[integer[i]] || 0;
+    var value = i >= 0 ? values[integer[i]] : 0;
     value += carry;
     carry = 0;
     while (value >= radix) {
