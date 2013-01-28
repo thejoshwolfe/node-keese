@@ -1,0 +1,16 @@
+{
+  "name": "keese",
+  "version": "0.0.0",
+  "description": "limited-functionality arbitrary-precision floats encoded as strings in javascript",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/thejoshwolfe/node-keese.git"
+  },
+  "author": "Josh Wolfe <thejoshwolfe@gmail.com>",
+  "license": "BSD",
+  "readmeFilename": "readme.md"
+}
