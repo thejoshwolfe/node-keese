@@ -10,17 +10,6 @@ var values = {};
 var zero = char_list[0];
 exports.zero = zero;
 
-exports.toNumber = function(n) {
-  var integer = parse(n).integer;
-  var result = 0;
-  while (integer.length > 0) {
-    result *= radix;
-    result += values[integer[0]];
-    integer = integer.substr(1);
-  }
-  return result;
-};
-
 exports.next = function(n) {
   var integer = parse(n).integer;
   var result = "";

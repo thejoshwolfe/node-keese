@@ -4,7 +4,7 @@
   "description": "limited-functionality arbitrary-precision floats encoded as strings in javascript",
   "main": "index.js",
   "scripts": {
-    "test": "node test/test.js"
+    "test": "node test.js"
   },
   "repository": {
     "type": "git",
