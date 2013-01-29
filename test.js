@@ -3,28 +3,42 @@ var keese = require('./')
   , assert = require('assert')
   ;
 
-var previous = null;
-var n = keese.zero
-for (var i = 0; i < 10000; i++) {
-  if (previous !== null) {
-    assert(previous < n, "well ordering: '" + previous + "' < '" + n + "'");
+testKeese(keese);
+testKeese(keese("0123456789@"));
+
+function testKeese(keese) {
+  var zero = keese.zero();
+
+  var biggest_single_digit;
+  var multi_digits = [];
+  var previous = null;
+  var n = zero
+  for (var i = 0; i < 10000; i++) {
+    if (previous !== null) {
+      assertLessThan(previous, n);
+      testBetween(previous, n);
+    }
+    if (n.length === 1) {
+      biggest_single_digit = n;
+    } else if (multi_digits.length < 2) {
+      multi_digits.push(n);
+    }
+    previous = n;
+    n = keese.next(n);
   }
-  previous = n;
-  n = keese.next(n);
-}
+  testBetween(biggest_single_digit, multi_digits[1]);
 
-function assertLessThan(a, b) {
-  assert(a < b, JSON.stringify(a) + " < " + JSON.stringify(b));
-}
-function testBetween(a, c) {
-  var b = keese.between(a, c);
-  assertLessThan(a, b);
-  assertLessThan(b, c);
-}
+  assert.throws(function() { keese.between(keese.next(zero),  zero); });
 
-testBetween(keese.zero, keese.next(keese.zero));
-testBetween("z", "~11");
-assert.throws(function() { keese.between(keese.next(keese.zero),  keese.zero); });
+  assert.strictEqual(zero, keese.between(zero, zero));
 
-assert.strictEqual(keese.zero, keese.between(keese.zero, keese.zero));
+  function assertLessThan(a, b) {
+    assert(a < b, JSON.stringify(a) + " < " + JSON.stringify(b));
+  }
+  function testBetween(a, c) {
+    var b = keese.between(a, c);
+    assertLessThan(a, b);
+    assertLessThan(b, c);
+  }
+}
 
