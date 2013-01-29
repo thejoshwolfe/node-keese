@@ -13,13 +13,18 @@ for (var i = 0; i < 10000; i++) {
   n = keese.next(n);
 }
 
-var zero = keese.zero;
-var one = keese.next(zero);
-var half = keese.between(zero, one);
-assert(zero < half, "zero < half");
-assert(half < one,  "half < one");
+function assertLessThan(a, b) {
+  assert(a < b, JSON.stringify(a) + " < " + JSON.stringify(b));
+}
+function testBetween(a, c) {
+  var b = keese.between(a, c);
+  assertLessThan(a, b);
+  assertLessThan(b, c);
+}
 
-assert.throws(function() { keese.between(one,  zero); });
-assert.throws(function() { keese.between(one,  half); });
-assert.throws(function() { keese.between(half, zero); });
+testBetween(keese.zero, keese.next(keese.zero));
+testBetween("z", "~11");
+assert.throws(function() { keese.between(keese.next(keese.zero),  keese.zero); });
+
+assert.strictEqual(keese.zero, keese.between(keese.zero, keese.zero));
 
