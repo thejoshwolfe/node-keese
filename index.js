@@ -2,13 +2,15 @@
 function closureGenerator(char_list) {
   if (typeof char_list === "string") {
     if (char_list.length < 3) throw new Error("we need more chars");
+    // make sure the chars are sorted
+    (function() {
+      for (var i = 1; i < char_list.length; i++) {
+        if (!(char_list[i - 1] < char_list[i])) throw new Error("char_list must contain sorted unique characters");
+      }
+    })();
   } else {
     char_list = "0123456789?@ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz~";
   }
-  // make sure the chars are sorted
-  char_list = char_list.split("");
-  char_list.sort();
-  char_list = char_list.join("");
   // the top char is the order specifier
   var order_specifier = char_list.charAt(char_list.length - 1);
   char_list = char_list.substr(0, char_list.length - 1);
@@ -29,6 +31,11 @@ function closureGenerator(char_list) {
     };
   }
   function construct(order_length, digits) {
+    // strip unnecessary leading zeros
+    while (order_length > 0 && digits.charAt(0) == zero) {
+      digits = digits.substr(1);
+      order_length--;
+    }
     var result = "";
     for (var i = 0; i < order_length; i++)
       result += order_specifier;
@@ -88,7 +95,7 @@ function closureGenerator(char_list) {
     var b = parse(s2);
     pad_to_equal_order(a, b);
     var b_carry = 0;
-    for (var i = 0; i < a.digits.length || b_carry > 0; i++) {
+    for (var i = 0; i < Math.max(a.digits.length, b.digits.length) || b_carry > 0; i++) {
       var a_value = values[a.digits[i] || zero];
       var b_value = values[b.digits[i] || zero] + b_carry;
       if (a_value === b_value) continue;
@@ -106,12 +113,23 @@ function closureGenerator(char_list) {
       half_distance_digits += char_list[half_distance_value];
       var half_distance = parse(construct(a.order_length, half_distance_digits));
       // truncate insignificant digits of a
-      a.digits = a.digits.substr(0, i);
+      a.digits = a.digits.substr(0, i + 1);
       return add(a, half_distance);
     }
     throw new Error; // unreachable
   };
 
+  // throw this one in as a bonus
+  keese.maximumSizeCharList = maximumSizeCharList;
+
   return keese;
 }
+
 module.exports = closureGenerator();
+
+function maximumSizeCharList() {
+  var result = "";
+  for (var i = 0; i <= 0xffff; i++)
+    result += String.fromCharCode(i);
+  return result;
+}
