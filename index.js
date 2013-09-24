@@ -1,33 +1,100 @@
 
-function closureGenerator(char_list) {
-  if (typeof char_list === "string") {
-    if (char_list.length < 3) throw new Error("we need more chars");
+module.exports = configure();
+function configure(alphabet) {
+  // validate input
+  if (typeof alphabet === "string") {
+    if (alphabet.length < 3) throw new Error("we need more chars");
     // make sure the chars are sorted
     (function() {
-      for (var i = 1; i < char_list.length; i++) {
-        if (!(char_list[i - 1] < char_list[i])) throw new Error("char_list must contain sorted unique characters");
+      for (var i = 1; i < alphabet.length; i++) {
+        if (!(alphabet[i - 1] < alphabet[i])) throw new Error("alphabet must contain sorted unique characters");
       }
     })();
   } else {
-    char_list = "0123456789?@ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz~";
+    alphabet = "0123456789?@ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz~";
   }
-  // the top char is the order specifier
-  var order_specifier = char_list.charAt(char_list.length - 1);
-  char_list = char_list.substr(0, char_list.length - 1);
-  // cache some things
-  var zero = char_list.charAt(0);
-  var radix = char_list.length;
+
+  // setup cached variables
+  var order_specifier = alphabet.charAt(alphabet.length - 1);
+  alphabet = alphabet.substr(0, alphabet.length - 1);
+  var zero = alphabet.charAt(0);
+  var one = alphabet.charAt(1);
+  var radix = alphabet.length;
   var values = {};
   (function() {
-    for (var i = 0; i < char_list.length; i++)
-      values[char_list[i]] = i;
+    for (var i = 0; i < alphabet.length; i++) {
+      values[alphabet[i]] = i;
+    }
   })();
 
-  function parse(s) {
-    var order_length = s.lastIndexOf(order_specifier) + 1;
+  // extra public members
+  keese.configure = configure;
+  return keese;
+
+
+  function keese(low, high) {
+    // this is the main function
+    if (low == null) {
+      if (high == null) {
+        // return anything above zero
+        return one;
+      } else {
+        // go smaller
+        return average(zero, high);
+      }
+    } else {
+      if (high == null) {
+        // go bigger
+        return increment(low);
+      } else {
+        // go in between
+        return average(low, high);
+      }
+    }
+  }
+  function average(low, high) {
+    if (low > high) throw new Error;
+    if (low === high) return low;
+    var a = parse(low);
+    var b = parse(high);
+    pad_to_equal_order(a, b);
+    var b_carry = 0;
+    for (var i = 0; i < Math.max(a.digits.length, b.digits.length) || b_carry > 0; i++) {
+      var a_value = values[a.digits[i] || zero];
+      var b_value = values[b.digits[i] || zero] + b_carry;
+      if (a_value === b_value) continue;
+      if (a_value === b_value - 1) {
+        // we need more digits, but remember that b is ahead
+        b_carry = radix;
+        continue;
+      }
+      // we have a distance of at least 2 between the values.
+      // half the distance floored is sure to be a positive single digit.
+      var half_distance_value = Math.floor((b_value - a_value) / 2);
+      var half_distance_digits = "";
+      for (var j = 0; j < i; j++)
+        half_distance_digits += zero;
+      half_distance_digits += alphabet[half_distance_value];
+      var half_distance = parse(construct(a.order_length, half_distance_digits));
+      // truncate insignificant digits of a
+      a.digits = a.digits.substr(0, i + 1);
+      return add(a, half_distance);
+    }
+    throw new Error; // unreachable
+  }
+
+  function increment(value) {
+    var n = parse(value);
+    // drop the fraction
+    n.digits = n.digits.substr(0, n.order_length + 1);
+    return add(n, parse(one));
+  }
+
+  function parse(value) {
+    var order_length = value.lastIndexOf(order_specifier) + 1;
     return {
       order_length: order_length,
-      digits: s.substr(order_length)
+      digits: value.substr(order_length)
     };
   }
   function construct(order_length, digits) {
@@ -61,75 +128,17 @@ function closureGenerator(char_list) {
     for (var i = Math.max(a.digits.length, b.digits.length) - 1; i >= 0; i--) {
       value += values[a.digits[i] || zero];
       value += values[b.digits[i] || zero];
-      result_digits = char_list[value % radix] + result_digits;
+      result_digits = alphabet[value % radix] + result_digits;
       value = Math.floor(value / radix);
     }
     // overflow up to moar digits
     while (value > 0) {
-      result_digits = char_list[value % radix] + result_digits;
+      result_digits = alphabet[value % radix] + result_digits;
       value = Math.floor(value / radix);
       order_length++;
     }
     return construct(order_length, result_digits);
   }
 
-  // public exports
-
-  var keese = function(char_list) {
-    return closureGenerator(char_list);
-  };
-
-  keese.zero = function() { return zero; };
-
-  keese.next = function(s) {
-    var n = parse(s);
-    // drop the fraction
-    n.digits = n.digits.substr(0, n.order_length + 1);
-    return add(n, parse(char_list[1]));
-  };
-
-  keese.between = function(s1, s2) {
-    if (s1 > s2) throw new Error;
-    if (s1 === s2) return s1;
-    var a = parse(s1);
-    var b = parse(s2);
-    pad_to_equal_order(a, b);
-    var b_carry = 0;
-    for (var i = 0; i < Math.max(a.digits.length, b.digits.length) || b_carry > 0; i++) {
-      var a_value = values[a.digits[i] || zero];
-      var b_value = values[b.digits[i] || zero] + b_carry;
-      if (a_value === b_value) continue;
-      if (a_value === b_value - 1) {
-        // we need more digits, but remember that b is ahead
-        b_carry = radix;
-        continue;
-      }
-      // we have a distance of at least 2 between the values.
-      // half the distance floored is sure to be a positive single digit.
-      var half_distance_value = Math.floor((b_value - a_value) / 2);
-      var half_distance_digits = "";
-      for (var j = 0; j < i; j++)
-        half_distance_digits += zero;
-      half_distance_digits += char_list[half_distance_value];
-      var half_distance = parse(construct(a.order_length, half_distance_digits));
-      // truncate insignificant digits of a
-      a.digits = a.digits.substr(0, i + 1);
-      return add(a, half_distance);
-    }
-    throw new Error; // unreachable
-  };
-
-  // throw this one in as a bonus
-  keese.maximumSizeCharList = maximumSizeCharList;
-
   return keese;
-}
-
-module.exports = closureGenerator();
-
-function maximumSizeCharList() {
-  var result = "";
-  for (var i = 0; i <= 0xffff; i++)
-    result += String.fromCharCode(i);
-  return result;
 }

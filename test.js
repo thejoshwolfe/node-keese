@@ -1,13 +1,24 @@
 
-var keese = require('./')
-  , assert = require('assert')
-  ;
+var keese = require('./');
+var assert = require('assert');
 
+var b = keese(null, null);
+var d = keese(b, null);
+assert(b < d); // forwards
+var c = keese(b, d);
+assert(b < c); // between
+assert(c < d);
+var a = keese(null, b);
+assert(a < b); // backwards
+
+var smaller_than_a = keese(null, a);
+
+testKeese(keese.configure("01~"));
+testKeese(keese.configure("0123456789@"));
 testKeese(keese);
-testKeese(keese("0123456789@"));
-testKeese(keese(keese.maximumSizeCharList()));
 
 function testKeese(keese) {
+  // TODO: everything here is broken
   var zero = keese.zero();
 
   function testExtremeNext() {
