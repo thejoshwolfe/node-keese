@@ -2,30 +2,26 @@
 var keese = require('./');
 var assert = require('assert');
 
-var b = keese(null, null);
-var d = keese(b, null);
-assert(b < d); // forwards
-var c = keese(b, d);
-assert(b < c); // between
-assert(c < d);
-var a = keese(null, b);
-assert(a < b); // backwards
+basicTest();
+overflowTest();
 
-var smaller_than_a = keese(null, a);
+function basicTest() {
+  var b = keese(null, null);
+  var d = keese(b, null);
+  assert(b < d); // forwards
+  var c = keese(b, d);
+  assert(b < c); // between
+  assert(c < d);
+  var a = keese(null, b);
+  assert(a < b); // backwards
+}
 
-testKeese(keese.configure("01~"));
-testKeese(keese.configure("0123456789@"));
-testKeese(keese);
-
-function testKeese(keese) {
-  // TODO: everything here is broken
-  var zero = keese.zero();
-
+function overflowTest() {
   function testExtremeNext() {
     var biggest_single_digit;
     var multi_digits = [];
     var previous = null;
-    var n = zero
+    var n = keese();
     for (var i = 0; i < 10000; i++) {
       if (previous !== null) {
         assertLessThan(previous, n);
@@ -37,12 +33,13 @@ function testKeese(keese) {
         multi_digits.push(n);
       }
       previous = n;
-      n = keese.next(n);
+      n = keese(n, null);
     }
-    if (multi_digits[1])
+    if (multi_digits[1]) {
       testBetween(biggest_single_digit, multi_digits[1]);
+    }
     function testBetween(a, c) {
-      var b = keese.between(a, c);
+      var b = keese(a, c);
       assertLessThan(a, b);
       assertLessThan(b, c);
     }
@@ -52,19 +49,20 @@ function testKeese(keese) {
 
   function testExtremeBetween(lower, upper, forward_func) {
     for (var i = 0; i < 1000; i++) {
-      var middle = keese.between(lower, upper);
+      var middle = keese(lower, upper);
       assertLessThan(lower, middle);
       assertLessThan(middle, upper);
 
-      if (forward_func(i))
+      if (forward_func(i)) {
         lower = middle;
-      else
+      } else {
         upper = middle;
+      }
     }
   }
   (function() {
-    var one = keese.next(zero);
-    var two = keese.next(one);
+    var one = keese();
+    var two = keese(one, null);
     var forward_funcs = [
       function() { return true; },
       function() { return false; },
@@ -73,7 +71,7 @@ function testKeese(keese) {
     ];
     var boundses = [
       [one, two],
-      [zero, big_number],
+      [one, big_number],
     ];
     for (var i = 0; i < boundses.length; i++) {
       for (var j = 0; j < forward_funcs.length; j++) {
@@ -82,9 +80,7 @@ function testKeese(keese) {
     }
   })();
 
-  assert.throws(function() { keese.between(keese.next(zero),  zero); });
-
-  assert.strictEqual(zero, keese.between(zero, zero));
+  assert.throws(function() { keese(keese(), keese()); });
 
   function assertLessThan(a, b) {
     assert(a < b, JSON.stringify(a) + " < " + JSON.stringify(b));

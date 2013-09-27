@@ -52,16 +52,26 @@ function configure(alphabet) {
       }
     }
   }
+
+  function increment(value) {
+    var n = parse(value);
+    // drop the fraction
+    n.digits = n.digits.substr(0, n.order_length + 1);
+    return add(n, parse(one));
+  }
+
   function average(low, high) {
-    if (low > high) throw new Error;
-    if (low === high) return low;
+    if (!(low < high)) {
+      throw new Error("assertion failed: " + JSON.stringify(low) + " < " + JSON.stringify(high));
+    }
     var a = parse(low);
     var b = parse(high);
     pad_to_equal_order(a, b);
     var b_carry = 0;
-    for (var i = 0; i < Math.max(a.digits.length, b.digits.length) || b_carry > 0; i++) {
-      var a_value = values[a.digits[i] || zero];
-      var b_value = values[b.digits[i] || zero] + b_carry;
+    var max_digit_length = Math.max(a.digits.length, b.digits.length);
+    for (var i = 0; i < max_digit_length || b_carry > 0; i++) {
+      var a_value =            values[a.digits[i]] || 0;
+      var b_value = b_carry + (values[b.digits[i]] || 0);
       if (a_value === b_value) continue;
       if (a_value === b_value - 1) {
         // we need more digits, but remember that b is ahead
@@ -83,11 +93,24 @@ function configure(alphabet) {
     throw new Error; // unreachable
   }
 
-  function increment(value) {
-    var n = parse(value);
-    // drop the fraction
-    n.digits = n.digits.substr(0, n.order_length + 1);
-    return add(n, parse(one));
+  function add(a, b) {
+    pad_to_equal_order(a, b);
+    var result_digits = "";
+    var order_length = a.order_length;
+    var value = 0;
+    for (var i = Math.max(a.digits.length, b.digits.length) - 1; i >= 0; i--) {
+      value += values[a.digits[i]] || 0;
+      value += values[b.digits[i]] || 0;
+      result_digits = alphabet[value % radix] + result_digits;
+      value = Math.floor(value / radix);
+    }
+    // overflow up to moar digits
+    while (value > 0) {
+      result_digits = alphabet[value % radix] + result_digits;
+      value = Math.floor(value / radix);
+      order_length++;
+    }
+    return construct(order_length, result_digits);
   }
 
   function parse(value) {
@@ -118,26 +141,6 @@ function configure(alphabet) {
       n.digits = zero + n.digits;
       n.order_length++;
     }
-  }
-
-  function add(a, b) {
-    pad_to_equal_order(a, b);
-    var result_digits = "";
-    var order_length = a.order_length;
-    var value = 0;
-    for (var i = Math.max(a.digits.length, b.digits.length) - 1; i >= 0; i--) {
-      value += values[a.digits[i] || zero];
-      value += values[b.digits[i] || zero];
-      result_digits = alphabet[value % radix] + result_digits;
-      value = Math.floor(value / radix);
-    }
-    // overflow up to moar digits
-    while (value > 0) {
-      result_digits = alphabet[value % radix] + result_digits;
-      value = Math.floor(value / radix);
-      order_length++;
-    }
-    return construct(order_length, result_digits);
   }
 
   return keese;
