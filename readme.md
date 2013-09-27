@@ -10,6 +10,10 @@ The values are comparable with the builtin operators (such as `<`), but most eve
 
 ```js
 var keese = require('keese');
+var something = keese();
+var bigger = keese(something, null);
+var smaller = keese(null, something);
+
 var middle = keese(low, high);
 ```
 
@@ -19,20 +23,4 @@ Where:
 * If `low` is `!= null`, then `low` will be `< middle`.
 * If `high` is `!= null`, then `middle` will be `< high`.
 * `keese` is a [pure function](http://en.wikipedia.org/wiki/Pure_function).
-
-
-advanced api
-------------
-
-You can configure the alphabet of characters keese uses to encode numbers.
-An alphabet such as `"01~"` is the smallest size possible, and will result in very long values returned from `keese`.
-The larger the alphabet, the more compact the values.
-The default alphabet is a balance between size and readability, similar to a base64 alphabet.
-
-```js
-var keese = require('keese');
-keese = keese.configure(alphabet);
-```
-
-Where `alphabet` is a string of ascending character values of at least length 3.
 
