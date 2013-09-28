@@ -3,10 +3,12 @@ node-keese
 
 Generator for well-ordered values, appropriate for use as sort keys.
 
-Given any two values, keese can generate a value between them.
-This would be trivial with numbers (`middle = (low + high) / 2`), except that numbers eventually run out of precision in JavaScript.
-Instead of using `Number`, keese effectively encodes arbitrary-precision floating-point numbers into strings.
-The values are comparable with the builtin operators (such as `<`), but most everything else about the string is unspecified.
+keese can always generate a bigger value, a smaller value, and a value between two other values.
+This is trivial using numbers with `x+1`, `x-1`, and `(x+y)/2` respectively.
+However, numbers have limited precision in JavaScript (see below), so instead keese uses strings.
+
+The string values are comparable with the builtin comparison operators (such as `<`),
+and keese can *always* generate a new value that satisfies the constraints (limited only by system resources).
 
 ```js
 var keese = require('keese');
@@ -15,9 +17,12 @@ var something = keese();
 var bigger = keese(something, null);
 var smaller = keese(null, something);
 // smaller < something < bigger
+var medium = keese(smaller, bigger);
+// smaller < medium < bigger
+// but no guarantee about middle vs something
 ```
 
-In general:
+Formally:
 
 ```js
 var middle = keese(low, high);
@@ -25,9 +30,10 @@ var middle = keese(low, high);
 
 Where:
 * `low` and `high` must each either be `== null` or be the result of a previous call to `keese`.
-* If both `low` and `high` are `!= null`, then `low` must be `< high`.
+* If `low` and `high` are both `== null`, then `middle` will be some arbitrary value to get you started.
 * If `low` is `!= null`, then `low` will be `< middle`.
 * If `high` is `!= null`, then `middle` will be `< high`.
+* If `low` and `high` are both `!= null`, then `low < middle < high` (so `low` must be `< high`).
 * `keese` is a [pure function](http://en.wikipedia.org/wiki/Pure_function).
 
 
@@ -138,4 +144,57 @@ Here are some example encoded values:
 * `"z"` is the number `63`.
 * `keese("z", null)` returns "~10", the number `64`.
 * `keese("1", "2")` returns "1U", the number `1.5`.
+
+
+Algorithmic Complexity
+----------------------
+
+The runtime performance of calling `keese` once is proportional to the size of the inputs.
+Formally, the runtime of `keese(low, high)` is `O(low.length + high.length)`.
+
+The size of the return value depends on the value of the input parameters.
+Informally:
+* initializing: `keese()` is `O(1)`
+* increasing: `keese(low, null)` is `O(log(n))`
+* decreasing: `keese(null, high)` is `O(n)` (probably could be improved)
+* betweening: `keese(low, high)` is `O(n)`
+
+Where `n` is how many times `keese` has been called to get the input value.
+
+More formally, start with `var x = keese()`, run the below code,
+then analyze the size of `x` in terms of `n`.
+
+Increasing (`O(log(n))`):
+```js
+for (var i = 0; i < n; i++) {
+  x = keese(x, null);
+}
+```
+
+Decreasing (`O(n)` - probably could be improved):
+```js
+for (var i = 0; i < n; i++) {
+  x = keese(null, x);
+}
+```
+
+Betweening (`O(n)`):
+```js
+var y = keese(x, null); // or any other value
+for (var i = 0; i < n; i++) {
+  if (Math.random() > 0.5) {
+    x = keese(x, y);
+  } else {
+    y = keese(x, y);
+  }
+}
+```
+
+I believe it is provable that betweening cannot do any better than `O(n)`:
+* Each value returned from `keese(x, y)` could be assigned to either `x` or `y`.
+* The next call to `keese(x, y)` must return a value that takes into account whether `x` or `y` was chosen in the previous step.
+  Because of this, the return value effectively encodes the decision of whether `x` or `y` was chosen.
+* This information is not lost on the next call to `keese(x, y)`.
+  Therefore, a value obtained through the algorithm above must encode a complete history of each decision.
+* Each of the `n` decisions must occupy up a minimum of 1 bit of space in the string, therefore the size of the string is `O(n)`.
 
