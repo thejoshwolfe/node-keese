@@ -1,7 +1,7 @@
 node-keese
 ==========
 
-Generator for well-ordered values, appropriate for use as sort keys.
+Generator for well-ordered values, appropriate for use as sorting keys.
 
 keese can always generate a bigger value, a smaller value, and a value between two other values.
 This is trivial using numbers with `x+1`, `x-1`, and `(x+y)/2` respectively.
@@ -34,11 +34,51 @@ Where:
 * If `low` is `!= null`, then `low` will be `< middle`.
 * If `high` is `!= null`, then `middle` will be `< high`.
 * If `low` and `high` are both `!= null`, then `low < middle < high` (so `low` must be `< high`).
-* `keese` is a [pure function](http://en.wikipedia.org/wiki/Pure_function).
+
+`keese` is a [pure function](http://en.wikipedia.org/wiki/Pure_function).
 
 
-Comparison of Number and keese strings:
----------------------------------------
+Why would I want this?
+----------------------
+
+Say you have a client-server architecture where clients can edit an ordered list of items.
+Clients can insert, delete, and move items around in the list.
+([Groove Basin](https://github.com/superjoe30/groovebasin) does this with the current playlist of songs.)
+
+The naive approach would be to use an Array, and communicate about where an operation is happening by using an index into the array.
+For example, "add item x at index 5", or "delete item at index 2" or "move item at index 7 to index 10", etc.
+This works well enough, but race conditions can cause sad behavior.
+
+Imagine all three of the above commands are sent to the server at once from different clients.
+Say the server receives the "delete" command first, and shifts all the items above index 2 down 1.
+Now the "move" command referencing the item at index 7 is actually talking about a different item, one that was originally at index 8.
+The "add" command is similarly misinterpreted, because the client may have specifically wanted "item x" to be inserted immediately after a particular item.
+
+Another naive approach is to communicate about locations relative to existing items.
+For example, "add item x just after item y", or "delete item y".
+Do you see the problem here?
+Say a client wants to insert "item x" in the middle of a range of 10 items, but another client deletes those 10 items before the insert request can be processed.
+There's no guarantee that the item(s) a client refers to will still exist on the server by the time the request is processed.
+
+The most robust solution is to communicate about locations using arbitrary sorting keys.
+Give every item a different value such that when the items are sorted using the values, they are ordered appropriately.
+For example, start out by giving each of 10 items in the list the values 1 through 10 as their sorting keys.
+
+Now if a client deletes the item with the sorting key of 2, there's no need to shift anything; just leave the other sorting keys where they are.
+When a client wants to insert an item between 5 and 6, give the new item a sorting key of 5.5.
+When a client wants to move an item, change the items sorting key to some other value.
+After performing each of these operations, simply sort the list again, and the items will be in the desired order.
+
+By using sorting keys, the opportunity for race conditions is almost entirely eliminated.
+There can still be race conditions when there is truly no possible automatic solution,
+such as two clients inserting different items into the same location, or two clients both trying to delete the same item at once.
+However, these problems usually have trivial solutions, and they are outside the scope of this project.
+
+keese exists for the purpose of generating sorting keys that never run out of precision.
+
+
+Numbers have limited precision
+------------------------------
 
 This code snippet shows how many times you can obtain a middle value
 using a JavaScript `Number` and still get a meaningful result.
