@@ -12,5 +12,8 @@
   },
   "author": "Josh Wolfe <thejoshwolfe@gmail.com>",
   "license": "BSD",
-  "readmeFilename": "readme.md"
+  "bugs": {
+    "url": "https://github.com/thejoshwolfe/node-keese/issues"
+  },
+  "homepage": "https://github.com/thejoshwolfe/node-keese"
 }
