@@ -1,6 +1,6 @@
 {
   "name": "keese",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Generator for well-ordered values, appropriate for use as sorting keys",
   "main": "index.js",
   "scripts": {
