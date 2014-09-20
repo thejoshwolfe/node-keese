@@ -11,7 +11,7 @@
     "url": "git://github.com/thejoshwolfe/node-keese.git"
   },
   "author": "Josh Wolfe <thejoshwolfe@gmail.com>",
-  "license": "BSD",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/thejoshwolfe/node-keese/issues"
   },
