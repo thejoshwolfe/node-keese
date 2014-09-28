@@ -166,7 +166,7 @@ Oh well. Maybe in a future version of keese.)
 As a matter of efficiency, using base 10 would only encode 10 values per character, but we can easily encode many more.
 JavaScript strings are made of 16-bit characters, so the maximum density we can achieve is radix 65536 (not counting the magnitude specifier).
 However, many characters in this range are unreadable and untypable,
-and some JSON libraries (such as in python) will escape non-ascii values with `"\x1234"` notation by default,
+and some JSON libraries (such as in python) will escape non-ascii values with `"\u1234"` notation by default,
 so radix 65536 may not be worth the trouble.
 Following the example of the base64 encoding, keese uses radix 64 with all printable ascii characters.
 
@@ -236,5 +236,5 @@ I believe it is provable that betweening cannot do any better than `O(n)`:
   Because of this, the return value effectively encodes the decision of whether `x` or `y` was chosen.
 * This information is not lost on the next call to `keese(x, y)`.
   Therefore, a value obtained through the algorithm above must encode a complete history of each decision.
-* Each of the `n` decisions must occupy up a minimum of 1 bit of space in the string, therefore the size of the string is `O(n)`.
+* Each of the `n` decisions must occupy a minimum of 1 bit of space in the string, therefore the size of the string is `O(n)`.
 
