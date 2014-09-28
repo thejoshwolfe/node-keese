@@ -1,7 +1,7 @@
 node-keese
 ==========
 
-Generator for well-ordered values, appropriate for use as sorting keys.
+Generates arbitrary-precision, comparable values, appropriate for use as sorting keys.
 
 keese can always generate a bigger value, a smaller value, and a value between two other values.
 This is trivial using numbers with `x+1`, `x-1`, and `(x+y)/2` respectively.
