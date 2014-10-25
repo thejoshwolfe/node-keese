@@ -42,7 +42,19 @@ function single_keese(low, high) {
 }
 function multi_keese(low, high, count) {
   var result = new Array(count);
-  if (count > 0) recurse(low, high, 0, count);
+  if (count > 0) {
+    if (high == null) {
+      // just allocate straight forward
+      for (var i = 0; i < count; i++) {
+        var value = keese(low, null);
+        result[i] = value;
+        low = value;
+      }
+    } else {
+      // binary tree descent
+      recurse(low, high, 0, count);
+    }
+  }
   return result;
   function recurse(low_value, high_value, low_index, high_index) {
     var mid_index = Math.floor((low_index + high_index) / 2);
