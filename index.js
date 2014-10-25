@@ -14,7 +14,14 @@ var values = (function() {
 })();
 
 module.exports = keese;
-function keese(low, high) {
+function keese(low, high, count) {
+  if (count != null) {
+    return multi_keese(low, high, count);
+  } else {
+    return single_keese(low, high);
+  }
+}
+function single_keese(low, high) {
   if (low == null) {
     if (high == null) {
       // return anything above 0
@@ -31,6 +38,19 @@ function keese(low, high) {
       // go in between
       return average(low, high);
     }
+  }
+}
+function multi_keese(low, high, count) {
+  var result = new Array(count);
+  if (count > 0) recurse(low, high, 0, count);
+  return result;
+  function recurse(low_value, high_value, low_index, high_index) {
+    console.log(low_index, high_index);
+    var mid_index = Math.floor((low_index + high_index) / 2);
+    var mid_value = single_keese(low_value, high_value);
+    result[mid_index] = mid_value;
+    if (low_index < mid_index) recurse(low_value, mid_value, low_index, mid_index);
+    if (mid_index + 1 < high_index) recurse(mid_value, high_value, mid_index + 1, high_index);
   }
 }
 
