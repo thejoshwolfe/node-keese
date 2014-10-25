@@ -1,6 +1,6 @@
 {
   "name": "keese",
-  "version": "1.0.4",
+  "version": "1.1.0",
   "description": "Generates arbitrary-precision, comparable values, appropriate for use as sorting keys",
   "main": "index.js",
   "scripts": {
