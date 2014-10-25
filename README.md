@@ -20,20 +20,26 @@ var smaller = keese(null, something);
 var medium = keese(smaller, bigger);
 // smaller < medium < bigger
 // but no guarantee about middle vs something
+var values = keese(smaller, bigger, 10);
+// values is an array of 10 ascending items between smaller and bigger
 ```
 
 Formally:
 
 ```js
-var middle = keese(low, high);
+var middle = keese(low, high, count);
 ```
 
 Where:
-* `low` and `high` must each either be `== null` or be the result of a previous call to `keese`.
-* If `low` and `high` are both `== null`, then `middle` will be some arbitrary value to get you started.
-* If `low` is `!= null`, then `low` will be `< middle`.
-* If `high` is `!= null`, then `middle` will be `< high`.
-* If `low` and `high` are both `!= null`, then `low < middle < high` (so `low` must be `< high`).
+* `low` and `high` must each either be `== null` or be values from a previous call to `keese`.
+* `count` must be either `== null` or a non-negative integer (type `Number`).
+* If `count == null`:
+  * If `low != null`, then `low < middle`.
+  * If `high != null`, then `middle < high`.
+* If `count != null`, `middle` is an Array of size `count` values, and if `count > 0`:
+  * If `low != null`, then `low < middle[0]`.
+  * If `high != null`, then `middle[middle.length - 1] < high`.
+  * The values in `middle` are in ascending order (i.e. `middle.sort()` will have no effect).
 
 `keese` is a [pure function](http://en.wikipedia.org/wiki/Pure_function).
 
@@ -238,3 +244,45 @@ I believe it is provable that betweening cannot do any better than `O(n)`:
   Therefore, a value obtained through the algorithm above must encode a complete history of each decision.
 * Each of the `n` decisions must occupy a minimum of 1 bit of space in the string, therefore the size of the string is `O(n)`.
 
+
+The Count Parameter
+-------------------
+
+The naive way to generate `n` values at once would be:
+
+```js
+function generateValues(low, high, count) {
+  var result = [];
+  for (var i = 0; i < count; i++) {
+    var value = keese(low, high);
+    result.push(value);
+    low = value;
+  }
+  return result;
+}
+```
+
+This results in values with `O(count)` size (see discussion on algorithmic complexity above).
+A better algorithm would be to fill in an array using a binary-tree descent pattern:
+generate a value for the middle element of the array, and then recurse on each of the left and right remaining spaces.
+
+```js
+function generateValues(low, high, count) {
+  var result = new Array(count);
+  if (count > 0) recurse(low, high, 0, count);
+  return result;
+  function recurse(low_value, high_value, low_index, high_index) {
+    var mid_index = Math.floor((low_index + high_index) / 2);
+    var mid_value = single_keese(low_value, high_value);
+    result[mid_index] = mid_value;
+    if (low_index < mid_index) recurse(low_value, mid_value, low_index, mid_index);
+    if (mid_index + 1 < high_index) recurse(mid_value, high_value, mid_index + 1, high_index);
+  }
+}
+```
+
+This generates values with only `O(log(count))` size.
+This is the optimal algorithmic complexity for such a task.
+
+Since this algorithm is probably useful to many clients and a bit cumbersome to implement yourself,
+keese provides an implementation via the optional `count` parameter to `keese()`.

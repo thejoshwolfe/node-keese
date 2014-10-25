@@ -4,6 +4,7 @@ var assert = require('assert');
 
 basicTest();
 overflowTest();
+countTest();
 
 function basicTest() {
   var b = keese(null, null);
@@ -87,3 +88,27 @@ function overflowTest() {
   }
 }
 
+function countTest() {
+  var some_value = keese();
+  runTests(null, null);
+  runTests(some_value, null);
+  runTests(null, some_value);
+  runTests(some_value, keese(some_value));
+  function runTests(low, high) {
+    testSize(0);
+    testSize(1);
+    testSize(2);
+    testSize(3);
+    testSize(1000);
+    function testSize(size) {
+      var array = keese(low, high, size);
+      assert(array.length === size, "array size expected to be: " + size);
+      var previous = low;
+      array.forEach(function(item) {
+        if (previous != null) assert(previous < item, JSON.stringify(previous) + " < " + JSON.stringify(item));
+        previous = item;
+      });
+      if (previous != null && high != null) assert(previous < high, JSON.stringify(previous) + " < " + JSON.stringify(high));
+    }
+  }
+}

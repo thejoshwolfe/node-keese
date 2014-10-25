@@ -45,7 +45,6 @@ function multi_keese(low, high, count) {
   if (count > 0) recurse(low, high, 0, count);
   return result;
   function recurse(low_value, high_value, low_index, high_index) {
-    console.log(low_index, high_index);
     var mid_index = Math.floor((low_index + high_index) / 2);
     var mid_value = single_keese(low_value, high_value);
     result[mid_index] = mid_value;
